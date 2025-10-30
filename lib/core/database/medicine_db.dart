@@ -29,6 +29,7 @@ class MedicineDB {
   Future _createDB(Database db, int version) async {
     const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
     const textType = 'TEXT NOT NULL';
+    const textNullableType = 'TEXT';
     const intType = 'INTEGER NOT NULL';
 
     await db.execute('''
@@ -40,7 +41,10 @@ class MedicineDB {
       times $textType,
       startDate $intType,
       endDate $intType,
-      isActive $intType
+      isActive $intType,
+      doctorName $textNullableType,
+      doctorContact $textNullableType,
+      color $intType
     )
     ''');
   }

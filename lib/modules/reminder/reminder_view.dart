@@ -9,67 +9,43 @@ class ReminderView extends GetView<ReminderController> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        children: [
-          // কাস্টম AppBar
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            color: Colors.teal,
-            child: Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (controller.todayReminders.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.alarm, color: Colors.white, size: 28),
-                SizedBox(width: 10),
+                Icon(
+                  Icons.event_available,
+                  size: 80,
+                  color: Colors.grey.shade400,
+                ),
+                SizedBox(height: 20),
                 Text(
-                  'আজকের রিমাইন্ডার',
+                  'আজকে কোনো ওষুধ নেই',
                   style: GoogleFonts.hindSiliguri(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontSize: 20,
+                    color: Colors.grey.shade600,
                   ),
                 ),
               ],
             ),
-          ),
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (controller.todayReminders.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.event_available,
-                        size: 80,
-                        color: Colors.grey.shade400,
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        'আজকে কোনো ওষুধ নেই',
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 20,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return ListView.builder(
-                padding: const EdgeInsets.all(8.0),
-                itemCount: controller.todayReminders.length,
-                itemBuilder: (context, index) {
-                  final medicine = controller.todayReminders[index];
-                  return ReminderCard(medicine: medicine);
-                },
-              );
-            }),
-          ),
-        ],
-      ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(8.0),
+          itemCount: controller.todayReminders.length,
+          itemBuilder: (context, index) {
+            final medicine = controller.todayReminders[index];
+            return ReminderCard(medicine: medicine);
+          },
+        );
+      }),
     );
   }
 }

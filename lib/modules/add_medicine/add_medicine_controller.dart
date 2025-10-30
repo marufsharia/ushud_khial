@@ -19,6 +19,21 @@ class AddMedicineController extends GetxController {
   var selectedTimes = <TimeOfDay>[].obs;
   var startDate = DateTime.now().obs;
   var endDate = DateTime.now().add(const Duration(days: 7)).obs;
+  final doctorNameController = TextEditingController(); // নতুন
+  final doctorContactController = TextEditingController(); // নতুন
+  var selectedColor = 0.obs; // নতুন, ডিফল্ট Teal
+
+  // রঙের তালিকা (Material Colors থেকে)
+  final List<Color> medicineColors = [
+    Colors.teal,
+    Colors.blue,
+    Colors.red,
+    Colors.orange,
+    Colors.purple,
+    Colors.green,
+    Colors.pink,
+    Colors.indigo,
+  ];
 
   void addTime(TimeOfDay time) {
     if (!selectedTimes.contains(time)) {
@@ -51,7 +66,12 @@ class AddMedicineController extends GetxController {
     if (nameController.text.isEmpty ||
         dosageController.text.isEmpty ||
         selectedTimes.isEmpty) {
-      Get.snackbar('ত্রুটি', 'অনুগ্রহ করে সব তথ্য সঠিকভাবে পূরণ করুন');
+      Get.snackbar(
+        'ত্রুটি',
+        'অনুগ্রহ করে সব তথ্য সঠিকভাবে পূরণ করুন',
+        backgroundColor: Colors.red,
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
@@ -62,6 +82,13 @@ class AddMedicineController extends GetxController {
       times: selectedTimes.map((time) => time.format(context)).toList(),
       startDate: startDate.value,
       endDate: endDate.value,
+      doctorName: doctorNameController.text.isEmpty
+          ? null
+          : doctorNameController.text,
+      doctorContact: doctorContactController.text.isEmpty
+          ? null
+          : doctorContactController.text,
+      color: selectedColor.value, // নির্বাচিত রঙ যোগ করুন
     );
 
     final createdMedicine = await _medicineDB.create(medicine);

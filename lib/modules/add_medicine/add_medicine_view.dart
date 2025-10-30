@@ -22,6 +22,10 @@ class AddMedicineView extends GetView<AddMedicineController> {
               'ডোজ (যেমন: ১টি ট্যাবলেট)',
             ),
             const SizedBox(height: 16),
+            _buildDoctorInfoSection(), // নতুন সেকশন
+            const SizedBox(height: 16),
+            _buildColorPicker(), // নতুন সেকশন
+            const SizedBox(height: 16),
             _buildFrequencySelector(),
             const SizedBox(height: 16),
             _buildTimeSelector(context),
@@ -139,6 +143,63 @@ class AddMedicineView extends GetView<AddMedicineController> {
             ),
             trailing: const Icon(Icons.calendar_today),
             onTap: () => controller.selectDate(context, false),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDoctorInfoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'ডাক্তারের তথ্য (ঐচ্ছিক)',
+          style: GoogleFonts.hindSiliguri(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8),
+        _buildTextField(controller.doctorNameController, 'ডাক্তারের নাম'),
+        SizedBox(height: 8),
+        _buildTextField(controller.doctorContactController, 'যোগাযোগ নম্বর'),
+      ],
+    );
+  }
+
+  Widget _buildColorPicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'ওষুধের রঙ নির্বাচন করুন',
+          style: GoogleFonts.hindSiliguri(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8),
+        Obx(
+          () => Wrap(
+            spacing: 8.0,
+            children: controller.medicineColors.map((color) {
+              final isSelected =
+                  controller.selectedColor.value ==
+                  controller.medicineColors.indexOf(color);
+              return GestureDetector(
+                onTap: () => controller.selectedColor.value = controller
+                    .medicineColors
+                    .indexOf(color),
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: color,
+                  child: isSelected
+                      ? Icon(Icons.check, color: Colors.white, size: 20)
+                      : null,
+                ),
+              );
+            }).toList(),
           ),
         ),
       ],

@@ -27,28 +27,31 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settingsController = Get.put(SettingsController());
-    return GetMaterialApp(
-      title: 'ওষুধের খেয়াল',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: settingsController.isDarkMode.value
-          ? ThemeMode.dark
-          : ThemeMode.light,
-      initialRoute: AppRoutes.main, // ইনিশিয়াল রুট পরিবর্তন
-      getPages: [
-        GetPage(
-          name: AppRoutes.main,
-          page: () => MainView(),
-          binding: AppBinding(),
-        ),
-        GetPage(
-          name: AppRoutes.addMedicine,
-          page: () => AddMedicineView(),
-          binding: AddMedicineBanding(),
-        ), // বাইন্ডিং যোগ করা হলো
-        // অন্যান্য পেজগুলো এখন MainView থেকে নেভিগেট করা হবে
-      ],
-      debugShowCheckedModeBanner: false,
-    );
+    return Obx(() {
+      return GetMaterialApp(
+        title: 'ওষুধের খেয়াল',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: settingsController.isDarkMode.value
+            ? ThemeMode.dark
+            : ThemeMode.light,
+        initialRoute: AppRoutes.main,
+        // ইনিশিয়াল রুট পরিবর্তন
+        getPages: [
+          GetPage(
+            name: AppRoutes.main,
+            page: () => MainView(),
+            binding: AppBinding(),
+          ),
+          GetPage(
+            name: AppRoutes.addMedicine,
+            page: () => AddMedicineView(),
+            binding: AddMedicineBanding(),
+          ), // বাইন্ডিং যোগ করা হলো
+          // অন্যান্য পেজগুলো এখন MainView থেকে নেভিগেট করা হবে
+        ],
+        debugShowCheckedModeBanner: false,
+      );
+    });
   }
 }

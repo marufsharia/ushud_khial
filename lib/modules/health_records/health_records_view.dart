@@ -9,84 +9,44 @@ class HealthRecordsView extends GetView<HealthRecordsController> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        children: [
-          // কাস্টম AppBar
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            color: Colors.teal,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (controller.records.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.folder_shared, color: Colors.white, size: 28),
-                    SizedBox(width: 10),
-                    Text(
-                      'স্বাস্থ্য রেকর্ড',
-                      style: GoogleFonts.hindSiliguri(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete_sweep, color: Colors.white),
-                  onPressed: () => _showClearConfirmation(context),
+                Icon(Icons.history, size: 80, color: Colors.grey.shade400),
+                SizedBox(height: 20),
+                Text(
+                  'কোনো রেকর্ড পাওয়া যায়নি',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 20,
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ],
             ),
-          ),
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (controller.records.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.history,
-                        size: 80,
-                        color: Colors.grey.shade400,
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        'কোনো রেকর্ড পাওয়া যায়নি',
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 20,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
+          );
+        }
 
-              // তারিখ অনুযায়ী সাজানোর জন্য কীগুলোকে সাজিয়ে নেওয়া
-              final sortedDates = controller.records.keys.toList()
-                ..sort((a, b) => b.compareTo(a)); // সবচেয়ে নতুন উপরে
+        // তারিখ অনুযায়ী সাজানোর জন্য কীগুলোকে সাজিয়ে নেওয়া
+        final sortedDates = controller.records.keys.toList()
+          ..sort((a, b) => b.compareTo(a)); // সবচেয়ে নতুন উপরে
 
-              return ListView.builder(
-                itemCount: sortedDates.length,
-                itemBuilder: (context, index) {
-                  final dateKey = sortedDates[index];
-                  final dayRecords = controller.records[dateKey]!;
-                  return RecordExpansionTile(
-                    date: dateKey,
-                    records: dayRecords,
-                  );
-                },
-              );
-            }),
-          ),
-        ],
-      ),
+        return ListView.builder(
+          itemCount: sortedDates.length,
+          itemBuilder: (context, index) {
+            final dateKey = sortedDates[index];
+            final dayRecords = controller.records[dateKey]!;
+            return RecordExpansionTile(date: dateKey, records: dayRecords);
+          },
+        );
+      }),
     );
   }
 

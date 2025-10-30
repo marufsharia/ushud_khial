@@ -9,6 +9,9 @@ class MedicineModel {
   final DateTime startDate;
   DateTime endDate;
   bool isActive;
+  String? doctorName; // নতুন
+  String? doctorContact; // নতুন
+  int color; // নতুন (Material Color এর জন্য ইনডেক্স)
 
   MedicineModel({
     this.id,
@@ -19,6 +22,9 @@ class MedicineModel {
     required this.startDate,
     required this.endDate,
     this.isActive = true,
+    this.doctorName,
+    this.doctorContact,
+    this.color = 0, // ডিফল্ট রঙ (Teal)
   });
 
   // ✅ সঠিক copyWith মেথড
@@ -31,6 +37,9 @@ class MedicineModel {
     DateTime? startDate,
     DateTime? endDate,
     bool? isActive,
+    String? doctorName,
+    String? doctorContact,
+    int? color,
   }) {
     return MedicineModel(
       id: id ?? this.id,
@@ -41,6 +50,9 @@ class MedicineModel {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       isActive: isActive ?? this.isActive,
+      doctorName: doctorName ?? this.doctorName,
+      doctorContact: doctorContact ?? this.doctorContact,
+      color: color ?? this.color,
     );
   }
 
@@ -55,6 +67,9 @@ class MedicineModel {
       'startDate': startDate.millisecondsSinceEpoch,
       'endDate': endDate.millisecondsSinceEpoch,
       'isActive': isActive ? 1 : 0, // bool কে int এ রূপান্তর
+      'doctorName': doctorName,
+      'doctorContact': doctorContact,
+      'color': color, // নতুন
     };
   }
 
@@ -69,6 +84,9 @@ class MedicineModel {
       startDate: DateTime.fromMillisecondsSinceEpoch(map['startDate']),
       endDate: DateTime.fromMillisecondsSinceEpoch(map['endDate']),
       isActive: (map['isActive'] ?? 1) == 1,
+      doctorName: map['doctorName'],
+      doctorContact: map['doctorContact'],
+      color: map['color'] ?? 0, // নতুন
     );
   }
 
