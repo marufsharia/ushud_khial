@@ -1,107 +1,105 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart'; // 👈 add this package
-
-import '../config/constants.dart';
 
 class NotificationService {
-  static final NotificationService _notificationService =
-      NotificationService._internal();
+  static final NotificationService _instance = NotificationService._internal();
 
-  factory NotificationService() => _notificationService;
+  factory NotificationService() => _instance;
+
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  Future<void> init() async {
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+  Future<void> initialize() async {
+    // Initialize timezone
+    tzdata.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
 
-    const DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
-        );
+    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosInit = DarwinInitializationSettings();
 
-    const InitializationSettings initializationSettings =
-        InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: initializationSettingsIOS,
-        );
+    const settings = InitializationSettings(android: androidInit, iOS: iosInit);
 
-    await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: onNotificationTap,
+    await _plugin.initialize(
+      settings,
+      onDidReceiveNotificationResponse: (response) {
+        debugPrint("Notification tapped: ${response.payload}");
+      },
     );
 
-    tz.initializeTimeZones();
-
-    // ✅ Android 12+ এর জন্য exact alarm permission চেক
-    if (Platform.isAndroid) {
-      await _checkExactAlarmPermission();
-    }
-  }
-
-  Future<void> _checkExactAlarmPermission() async {
-    final bool granted = await Permission.scheduleExactAlarm.isGranted;
+    // Request permissions
+    final granted = await Permission.scheduleExactAlarm.isGranted;
     if (!granted) {
-      // ইউজারকে সেটিংসে নিয়ে যাও, যাতে সে ম্যানুয়ালি পারমিশন দিতে পারে
       await openAppSettings();
     }
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission();
+
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+
+    debugPrint("🔔 Notification service initialized successfully!");
   }
 
-  void onNotificationTap(NotificationResponse notificationResponse) {
-    debugPrint("Notification tapped: ${notificationResponse.payload}");
-  }
-
-  Future<void> showNotification(int id, String title, String body) async {
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-          AppConstants.notificationChannelId,
-          AppConstants.notificationChannelName,
-          channelDescription: AppConstants.notificationChannelDescription,
-          importance: Importance.max,
-          priority: Priority.high,
-        );
-
-    const NotificationDetails details = NotificationDetails(
-      android: androidDetails,
+  /// Show instant notification
+  Future<void> showInstantNotification(
+    int id,
+    String title,
+    String body,
+  ) async {
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'instant_channel',
+        'Instant Notifications',
+        channelDescription: 'Immediate notification channel',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
     );
 
-    await flutterLocalNotificationsPlugin.show(id, title, body, details);
+    await _plugin.show(id, title, body, details);
   }
 
+  /// Schedule notification (new API style)
   Future<void> scheduleNotification(
     int id,
     String title,
     String body,
     DateTime scheduledTime,
   ) async {
-    await flutterLocalNotificationsPlugin.zonedSchedule(
+    final tzTime = tz.TZDateTime.from(scheduledTime, tz.local);
+
+    await _plugin.zonedSchedule(
       id,
       title,
       body,
-      tz.TZDateTime.from(scheduledTime, tz.local),
+      tzTime,
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          AppConstants.notificationChannelId,
-          AppConstants.notificationChannelName,
-          channelDescription: AppConstants.notificationChannelDescription,
-          importance: Importance.max,
+          'scheduled_channel',
+          'Scheduled Notifications',
+          channelDescription: 'Channel for scheduled notifications',
+          importance: Importance.high,
           priority: Priority.high,
         ),
+        iOS: DarwinNotificationDetails(),
       ),
+      // ✅ These parameters replaced old ones
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
+      matchDateTimeComponents: null,
     );
-  }
 
-  Future<void> cancelNotification(int id) async {
-    await flutterLocalNotificationsPlugin.cancel(id);
+    debugPrint("✅ Scheduled notification at: $scheduledTime");
   }
 }

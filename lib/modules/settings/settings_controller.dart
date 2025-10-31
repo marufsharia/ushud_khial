@@ -41,10 +41,11 @@ class SettingsController extends GetxController {
     isDarkMode.value = value;
     box.write('is_dark_mode', value);
     Get.changeTheme(value ? AppTheme.darkTheme : AppTheme.lightTheme);
-    Get.snackbar(
-      'সেটিংস',
-      value ? 'ডার্ক মোড চালু করা হয়েছে' : 'লাইট মোড চালু করা হয়েছে',
-    );
+    update();
+    // Get.snackbar(
+    //   'সেটিংস',
+    //   value ? 'ডার্ক মোড চালু করা হয়েছে' : 'লাইট মোড চালু করা হয়েছে',
+    // );
   }
 
   void clearAllData() {

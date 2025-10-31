@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:ushud_khial/core/config/app_routes.dart'; // নতুন ইমপোর্ট
-import 'package:ushud_khial/core/widgets/custom_app_bar.dart'; // নতুন ইমপোর্ট
-import '../../core/widgets/lib/core/widgets/app_drawer.dart';
+import 'package:ushud_khial/core/config/app_routes.dart';
+import 'package:ushud_khial/core/widgets/custom_app_bar.dart';
+
+import '../../core/widgets/app_drawer.dart';
+import '../analytics/analytics_view.dart';
 import '../home/home_view.dart';
 import '../reminder/reminder_view.dart';
-import '../health_records/health_records_view.dart';
 import '../settings/settings_view.dart';
 import 'main_controller.dart';
 
@@ -16,7 +16,7 @@ class MainView extends GetView<MainController> {
   final List<Widget> _pages = const [
     HomeView(),
     ReminderView(),
-    HealthRecordsView(),
+    AnalyticsView(),
     SettingsView(),
   ];
 
@@ -24,25 +24,31 @@ class MainView extends GetView<MainController> {
   Widget build(BuildContext context) {
     return Obx(
       () => Scaffold(
-        // নতুন CustomAppBar ব্যবহার করা হচ্ছে
         appBar: CustomAppBar(
           title: _getPageTitle(controller.currentIndex.value),
-          // Drawer খোলার জন্য মেনু আইকন স্বয়ংক্রিয়ভাবে যোগ হবে
         ),
-        // নতুন AppDrawer যোগ করা হচ্ছে
-        drawer: AppDrawer(),
-
-        // ব্যাকগ্রাউন্ড কালার পরিবর্তন করে আরও সুন্দর লুক দেওয়া হলো
-        body: IndexedStack(
-          index: controller.currentIndex.value,
-          children: _pages,
+        drawer: const AppDrawer(),
+        backgroundColor: Get.theme.scaffoldBackgroundColor,
+        body: Container(
+          // বডির জন্য একটি সূক্ষ্ম কার্ড ডিজাইন
+          margin: const EdgeInsets.all(4.0),
+          decoration: BoxDecoration(
+            color: Get.theme.cardColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: IndexedStack(
+              index: controller.currentIndex.value,
+              children: _pages,
+            ),
+          ),
         ),
         bottomNavigationBar: _buildBottomNavBar(),
         floatingActionButton: controller.currentIndex.value == 0
             ? FloatingActionButton(
                 onPressed: () => Get.toNamed(AppRoutes.addMedicine),
-                backgroundColor: Get.theme.primaryColor,
-                tooltip: 'নতুন ওষুধ যোগ করুন',
+                backgroundColor: Get.theme.colorScheme.primary,
                 child: const Icon(Icons.add, color: Colors.white),
               )
             : null,
@@ -57,7 +63,7 @@ class MainView extends GetView<MainController> {
       case 1:
         return 'আজকের রিমাইন্ডার';
       case 2:
-        return 'স্বাস্থ্য রেকর্ড';
+        return 'অ্যানালিটিক্স';
       case 3:
         return 'সেটিংস';
       default:
@@ -70,10 +76,13 @@ class MainView extends GetView<MainController> {
       currentIndex: controller.currentIndex.value,
       onTap: controller.changePage,
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: Get.theme.primaryColor,
-      unselectedItemColor: Colors.grey,
-      selectedLabelStyle: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
-      unselectedLabelStyle: GoogleFonts.hindSiliguri(),
+      backgroundColor: Get.theme.cardColor,
+      selectedItemColor: Get.theme.colorScheme.primary,
+      unselectedItemColor: Get.theme.unselectedWidgetColor,
+      selectedLabelStyle: Get.theme.textTheme.bodySmall?.copyWith(
+        fontWeight: FontWeight.bold,
+      ),
+      unselectedLabelStyle: Get.theme.textTheme.bodySmall,
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.list_alt),
@@ -81,8 +90,8 @@ class MainView extends GetView<MainController> {
         ),
         BottomNavigationBarItem(icon: Icon(Icons.alarm), label: 'রিমাইন্ডার'),
         BottomNavigationBarItem(
-          icon: Icon(Icons.folder_shared),
-          label: 'রেকর্ড',
+          icon: Icon(Icons.analytics_outlined),
+          label: 'অ্যানালিটিক্স',
         ),
         BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'সেটিংস'),
       ],

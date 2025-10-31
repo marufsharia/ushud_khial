@@ -10,5 +10,6 @@ class AppConstants {
   // Notification Channel
   static const String notificationChannelId = 'medicine_reminders';
   static const String notificationChannelName = 'Medicine Reminders';
-  static const String notificationChannelDescription = 'Notifications to remind you to take your medicine';
+  static const String notificationChannelDescription =
+      'Notifications to remind you to take your medicine';
 }

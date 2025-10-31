@@ -44,7 +44,9 @@ class MedicineDB {
       isActive $intType,
       doctorName $textNullableType,
       doctorContact $textNullableType,
-      color $intType
+      color $intType,
+      currentStock $intType,
+      refillThreshold $intType
     )
     ''');
   }

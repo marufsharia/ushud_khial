@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:intl/intl.dart';
 import 'package:ushud_khial/core/database/medicine_db.dart';
 import 'package:ushud_khial/data/models/medicine_model.dart';
 

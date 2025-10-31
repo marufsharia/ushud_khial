@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
-import 'package:ushud_khial/core/database/medicine_db.dart';
-import 'package:ushud_khial/core/services/notification_service.dart';
-import 'package:ushud_khial/modules/add_medicine/add_medicine_controller.dart';
-import 'package:ushud_khial/modules/home/home_controller.dart';
-
+import 'core/database/medicine_db.dart';
+import 'core/services/notification_service.dart';
+import 'core/services/permission_service.dart';
+import 'modules/add_medicine/add_medicine_controller.dart';
+import 'modules/analytics/analytics_controller.dart';
+import 'modules/home/home_controller.dart';
+import 'modules/notification_test/notification_test_controller.dart';
 import 'modules/health_records/health_records_controller.dart';
 import 'modules/main/main_controller.dart';
 import 'modules/reminder/reminder_controller.dart';
@@ -15,14 +17,16 @@ class AppBinding extends Bindings {
     // Core Services & Database
     Get.lazyPut<MedicineDB>(() => MedicineDB.instance);
     Get.lazyPut<NotificationService>(() => NotificationService());
+    Get.lazyPut(() => PermissionService());
 
     // Controllers
-    // Controllers
-    Get.lazyPut(() => MainController()); // নতুন কন্ট্রোলার
+    Get.lazyPut(() => MainController());
     Get.lazyPut(() => HomeController());
     Get.lazyPut(() => AddMedicineController());
-    Get.lazyPut(() => ReminderController()); // নতুন কন্ট্রোলার
-    Get.lazyPut(() => HealthRecordsController()); // যোগ করুন
-    Get.lazyPut(() => SettingsController()); // যোগ করুন
+    Get.lazyPut(() => ReminderController());
+    Get.lazyPut(() => AnalyticsController());
+    Get.lazyPut(() => HealthRecordsController());
+    Get.lazyPut(() => SettingsController());
+    Get.lazyPut(() => NotificationTestController());
   }
 }

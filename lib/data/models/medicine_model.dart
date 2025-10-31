@@ -12,6 +12,9 @@ class MedicineModel {
   String? doctorName; // নতুন
   String? doctorContact; // নতুন
   int color; // নতুন (Material Color এর জন্য ইনডেক্স)
+  int currentStock; // নতুন: বর্তমান স্টক
+  int
+  refillThreshold; // নতুন: কত সংখ্যক ওষুধ থাকলে রিফিলের জন্য রিমাইন্ডার দেবে
 
   MedicineModel({
     this.id,
@@ -25,6 +28,8 @@ class MedicineModel {
     this.doctorName,
     this.doctorContact,
     this.color = 0, // ডিফল্ট রঙ (Teal)
+    this.currentStock = 30, // ডিফল্ট স্টক
+    this.refillThreshold = 10, // ডিফল্ট থ্রেশহোল্ড
   });
 
   // ✅ সঠিক copyWith মেথড
@@ -40,6 +45,8 @@ class MedicineModel {
     String? doctorName,
     String? doctorContact,
     int? color,
+    int? currentStock,
+    int? refillThreshold,
   }) {
     return MedicineModel(
       id: id ?? this.id,
@@ -53,6 +60,8 @@ class MedicineModel {
       doctorName: doctorName ?? this.doctorName,
       doctorContact: doctorContact ?? this.doctorContact,
       color: color ?? this.color,
+      currentStock: currentStock ?? this.currentStock,
+      refillThreshold: refillThreshold ?? this.refillThreshold,
     );
   }
 
@@ -70,6 +79,8 @@ class MedicineModel {
       'doctorName': doctorName,
       'doctorContact': doctorContact,
       'color': color, // নতুন
+      'currentStock': currentStock, // নতুন
+      'refillThreshold': refillThreshold, // নতুন
     };
   }
 
@@ -87,6 +98,8 @@ class MedicineModel {
       doctorName: map['doctorName'],
       doctorContact: map['doctorContact'],
       color: map['color'] ?? 0, // নতুন
+      currentStock: map['currentStock'] ?? 30, // নতুন
+      refillThreshold: map['refillThreshold'] ?? 10, // নতুন
     );
   }
 
