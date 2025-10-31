@@ -2,36 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:ushud_khial/app_binding.dart';
-import 'package:ushud_khial/modules/medicine_details/medicine_details_view.dart';
-
+import 'app_binding.dart';
 import 'core/config/app_routes.dart';
 import 'core/config/app_theme.dart';
-import 'core/services/foreground_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/permission_service.dart';
-import 'modules/add_medicine/add_mediciine_binding.dart';
+import 'modules/add_medicine/add_medicine_binding.dart';
 import 'modules/add_medicine/add_medicine_view.dart';
 import 'modules/main/main_view.dart';
-import 'modules/medicine_details/mediciine_details_binding.dart';
+import 'modules/medicine_details/medicine_details_binding.dart';
+import 'modules/medicine_details/medicine_details_view.dart';
 import 'modules/settings/settings_controller.dart';
 
+/// Initializes the app and necessary services.
 void main() async {
+  // Ensures that widget binding is initialized.
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initializes date formatting for Bengali locale.
   await initializeDateFormatting('bn_BD', null);
-  await GetStorage.init(); // Get Storage ইনিশিয়ালাইজ করা
-  await NotificationService()
-      .initialize(); // নোটিফিকেশন সার্ভিস ইনিশিয়ালাইজ করা
-  // ফোরগ্রাউন্ড সার্ভিস চালু করুন
-  Get.put(ForegroundService()).start();
-  // পারমিশন সার্ভিস ইনস্ট্যান্স করুন
+
+  // Initializes local storage for simple data persistence.
+  await GetStorage.init();
+
+  // Initializes the notification service.
+  await NotificationService().initialize();
+
+  // Initializes the permission service and checks for necessary permissions.
   final permissionService = Get.put(PermissionService());
   await permissionService.checkNotificationPermission();
   await permissionService.checkBatteryOptimization();
+  // Sets up the app's dependency injection.
   AppBinding().dependencies();
+
   runApp(const MyApp());
 }
 
+/// The root widget of the application.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -47,21 +54,40 @@ class MyApp extends StatelessWidget {
           ? ThemeMode.dark
           : ThemeMode.light,
       initialRoute: AppRoutes.main,
-      // ইনিশিয়াল রুট পরিবর্তন
+      // Defines the app's routes and pages.
       getPages: [
         GetPage(
           name: AppRoutes.main,
-          page: () => MainView(),
+          page: () => const MainView(),
           binding: AppBinding(),
         ),
         GetPage(
           name: AppRoutes.addMedicine,
-          page: () => AddMedicineView(),
+          page: () => const AddMedicineView(),
           binding: AddMedicineBanding(),
         ),
+        // GetPage(
+        //   name: AppRoutes.detailsMedicine,
+        //   page: () => MedicineDetailsView(id: 1),
+        //   binding: MedicineDetailsBanding(),
+        // ),
         GetPage(
           name: AppRoutes.detailsMedicine,
-          page: () => MedicineDetailsView(),
+          page: () {
+            final parameters = Get.parameters;
+            final id = int.parse(
+              parameters['id'] != null
+                  ? parameters['id']!
+                  : Get.arguments['id'].toString(),
+            );
+
+            if (id == null || id == 0) {
+              Get.snackbar('ত্রুটি', 'সঠিক ID প্রদান করুন');
+              return const SizedBox.shrink();
+            }
+
+            return MedicineDetailsView(id: id);
+          },
           binding: MedicineDetailsBanding(),
         ),
       ],

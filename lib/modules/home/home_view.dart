@@ -140,9 +140,8 @@ class ModernMedicineCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(15),
         onTap: () {
-          // Navigate with controller binding
-          Get.put(MedicineDetailsController(initialMedicine: medicine));
-          Get.to(() => const MedicineDetailsView());
+          debugPrint('Medicine tapped: ${medicine.toString()}');
+          Get.toNamed('${AppRoutes.detailsMedicine}/?id=${medicine.id}');
         },
         child: Container(
           padding: const EdgeInsets.all(16),

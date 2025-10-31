@@ -2,35 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ushud_khial/core/widgets/custom_app_bar.dart';
+
+import '../../data/models/medicine_model.dart';
 import 'medicine_details_controller.dart';
 
-class MedicineDetailsView extends GetView<MedicineDetailsController> {
-  const MedicineDetailsView({super.key});
+class MedicineDetailsView extends StatefulWidget {
+  final int id;
+  final controller = Get.find<MedicineDetailsController>();
+  MedicineDetailsView({super.key, required this.id}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.fetchMedicine(id);
+    });
+  }
+
+  @override
+  State<MedicineDetailsView> createState() => _MedicineDetailsViewState();
+}
+
+class _MedicineDetailsViewState extends State<MedicineDetailsView> {
+  late final MedicineModel? medicine = widget.controller.medicine.value;
 
   @override
   Widget build(BuildContext context) {
+    // Show a loading indicator while the medicine data is being fetched or is null.
+
+    if (widget.controller.isLoading.value) {
+      return const Scaffold(
+        appBar: CustomAppBar(title: 'লোড হচ্ছে...'),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Obx(() {
-      final medicine = controller.medicine.value;
-
-      // Loading state
-      if (medicine == null) {
-        return const Scaffold(
-          appBar: CustomAppBar(title: 'লোড হচ্ছে...'),
-          body: Center(child: CircularProgressIndicator()),
-        );
-      }
-
       return Scaffold(
-        backgroundColor: Colors.grey.shade100,
-        appBar: CustomAppBar(title: medicine.name),
+        backgroundColor: Get.theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: medicine!.name),
         body: SingleChildScrollView(
           child: Column(
             children: [
-              _buildHeader(medicine),
+              _buildHeader(medicine!),
               const SizedBox(height: 16),
-              _buildInfoSection(medicine),
+              _buildInfoSection(medicine!),
               const SizedBox(height: 20),
-              _buildActionSection(medicine),
+              _buildActionSection(medicine!),
             ],
           ),
         ),
@@ -38,16 +52,16 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
     });
   }
 
-  // Header section
-  Widget _buildHeader(dynamic medicine) {
-    final cardColor = controller.medicineColor;
-    final stockColor = controller.stockStatusColor;
+  /// Builds the header section with the medicine icon, name, and stock status.
+  Widget _buildHeader(MedicineModel medicine) {
+    final cardColor = widget.controller.medicineColor;
+    final stockColor = widget.controller.stockStatusColor;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Get.theme.cardColor,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
@@ -86,14 +100,14 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
                       style: GoogleFonts.hindSiliguri(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Get.theme.colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       medicine.dosage,
                       style: GoogleFonts.hindSiliguri(
                         fontSize: 16,
-                        color: Colors.grey.shade600,
+                        color: Get.theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -119,7 +133,7 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
                 ),
                 _buildStockInfo(
                   'স্ট্যাটাস',
-                  controller.stockStatusText,
+                  widget.controller.stockStatusText,
                   stockColor,
                 ),
               ],
@@ -130,13 +144,16 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
     );
   }
 
+  /// Builds a row displaying stock information.
   Widget _buildStockInfo(String title, String value, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: GoogleFonts.hindSiliguri(color: Colors.grey.shade700),
+          style: GoogleFonts.hindSiliguri(
+            color: Get.theme.colorScheme.onSurfaceVariant,
+          ),
         ),
         Text(
           value,
@@ -150,13 +167,13 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
     );
   }
 
-  // Info section
-  Widget _buildInfoSection(dynamic medicine) {
+  /// Builds the section with detailed information about the medicine.
+  Widget _buildInfoSection(MedicineModel medicine) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Get.theme.cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -197,22 +214,25 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
     );
   }
 
+  /// Builds a single list tile for displaying information.
   Widget _buildInfoTile(IconData icon, String title, String value) {
     return ListTile(
-      leading: Icon(icon, color: Get.theme.primaryColor),
+      leading: Icon(icon, color: Get.theme.colorScheme.primary),
       title: Text(
         title,
         style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
       ),
       subtitle: Text(
         value,
-        style: GoogleFonts.hindSiliguri(color: Colors.black54),
+        style: GoogleFonts.hindSiliguri(
+          color: Get.theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
 
-  // Action buttons
-  Widget _buildActionSection(dynamic medicine) {
+  /// Builds the action buttons for updating stock, toggling status, and deleting.
+  Widget _buildActionSection(MedicineModel medicine) {
     return Container(
       margin: const EdgeInsets.all(16),
       child: Column(
@@ -220,20 +240,22 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
           SizedBox(
             width: double.infinity,
             child: FilledButton.tonal(
-              onPressed: controller.showUpdateStockDialog,
+              onPressed: widget.controller.showUpdateStockDialog,
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                backgroundColor: Colors.blue.shade100,
-                foregroundColor: Colors.blue.shade700,
+                backgroundColor: Get.theme.colorScheme.secondaryContainer,
+                foregroundColor: Get.theme.colorScheme.onSecondaryContainer,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.add_shopping_cart),
-                  SizedBox(width: 8),
+                children: [
+                  const Icon(Icons.add_shopping_cart),
+                  const SizedBox(width: 8),
                   Text(
                     'স্টক আপডেট করুন',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: GoogleFonts.hindSiliguri(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -244,15 +266,15 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
             children: [
               Expanded(
                 child: FilledButton.tonal(
-                  onPressed: controller.toggleStatus,
+                  onPressed: widget.controller.toggleStatus,
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     backgroundColor: medicine.isActive
-                        ? Colors.orange.shade100
-                        : Colors.green.shade100,
+                        ? Get.theme.colorScheme.errorContainer
+                        : Get.theme.colorScheme.primaryContainer,
                     foregroundColor: medicine.isActive
-                        ? Colors.orange.shade700
-                        : Colors.green.shade700,
+                        ? Get.theme.colorScheme.onErrorContainer
+                        : Get.theme.colorScheme.onPrimaryContainer,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -261,7 +283,9 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
                       const SizedBox(width: 8),
                       Text(
                         medicine.isActive ? 'বন্ধ করুন' : 'চালু করুন',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: GoogleFonts.hindSiliguri(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -270,20 +294,22 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton.tonal(
-                  onPressed: controller.deleteMedicine,
+                  onPressed: widget.controller.deleteMedicine,
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: Colors.red.shade100,
-                    foregroundColor: Colors.red.shade700,
+                    backgroundColor: Get.theme.colorScheme.errorContainer,
+                    foregroundColor: Get.theme.colorScheme.onErrorContainer,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.delete_outline),
-                      SizedBox(width: 8),
+                    children: [
+                      const Icon(Icons.delete_outline),
+                      const SizedBox(width: 8),
                       Text(
                         'মুছে ফেলুন',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: GoogleFonts.hindSiliguri(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -296,5 +322,6 @@ class MedicineDetailsView extends GetView<MedicineDetailsController> {
     );
   }
 
+  /// Formats a DateTime object into a string (DD/MM/YYYY).
   String _formatDate(DateTime date) => '${date.day}/${date.month}/${date.year}';
 }

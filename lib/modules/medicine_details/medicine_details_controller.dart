@@ -5,20 +5,30 @@ import 'package:ushud_khial/data/models/medicine_model.dart';
 import 'package:ushud_khial/modules/home/home_controller.dart';
 
 class MedicineDetailsController extends GetxController {
-  final MedicineDB _medicineDB = Get.find<MedicineDB>();
-  final MedicineModel initialMedicine;
+  late final MedicineDB _medicineDB;
+  final Rx<MedicineModel?> medicine = Rx<MedicineModel?>(null);
+  late final TextEditingController stockController;
+  final RxBool isLoading = false.obs;
 
-  // Reactive medicine
-  final medicine = Rxn<MedicineModel>();
+  MedicineDetailsController() {
+    _medicineDB = MedicineDB.instance; // ✅ FIXED
+    stockController = TextEditingController();
+  }
 
-  // Stock controller
-  late TextEditingController stockController;
-
-  MedicineDetailsController({required this.initialMedicine}) {
-    medicine.value = initialMedicine;
-    stockController = TextEditingController(
-      text: initialMedicine.currentStock.toString(),
-    );
+  Future<void> fetchMedicine(int id) async {
+    try {
+      isLoading(true);
+      final data = await _medicineDB.readMedicine(id);
+      medicine.value = data;
+      debugPrint('Medicine fetched: $data');
+      isLoading(false);
+    } catch (e) {
+      Get.snackbar(
+        'ত্রুটি',
+        'ওষুধটি খুঁজে পাওয়া যায়নি',
+        backgroundColor: Colors.redAccent,
+      );
+    }
   }
 
   @override
@@ -27,9 +37,8 @@ class MedicineDetailsController extends GetxController {
     super.onClose();
   }
 
-  // Medicine color
   Color get medicineColor {
-    final colors = [
+    const colors = [
       Colors.teal,
       Colors.blue,
       Colors.red,
@@ -39,30 +48,26 @@ class MedicineDetailsController extends GetxController {
       Colors.pink,
       Colors.indigo,
     ];
-    return medicine.value != null
-        ? colors[medicine.value!.color.clamp(0, colors.length - 1)]
-        : Colors.teal;
+    final index = medicine.value?.color ?? 0;
+    return colors[index.clamp(0, colors.length - 1)];
   }
 
-  // Stock status text
   String get stockStatusText {
-    if (medicine.value == null) return 'অজানা';
-    final stock = medicine.value!.currentStock;
+    final stock = medicine.value?.currentStock ?? 0;
+    final threshold = medicine.value?.refillThreshold ?? 10;
     if (stock == 0) return 'স্টক শেষ';
-    if (stock <= medicine.value!.refillThreshold) return 'শীঘ্রই কিনুন';
+    if (stock <= threshold) return 'শীঘ্রই কিনুন';
     return 'পর্যাপ্ত স্টক';
   }
 
-  // Stock status color
   Color get stockStatusColor {
-    if (medicine.value == null) return Colors.grey;
-    final stock = medicine.value!.currentStock;
+    final stock = medicine.value?.currentStock ?? 0;
+    final threshold = medicine.value?.refillThreshold ?? 10;
     if (stock == 0) return Colors.red;
-    if (stock <= medicine.value!.refillThreshold) return Colors.orange;
+    if (stock <= threshold) return Colors.orange;
     return Colors.green;
   }
 
-  // Update stock
   void showUpdateStockDialog() {
     Get.dialog(
       AlertDialog(
@@ -70,20 +75,19 @@ class MedicineDetailsController extends GetxController {
         content: TextField(
           controller: stockController,
           keyboardType: TextInputType.number,
-          autofocus: true,
           decoration: const InputDecoration(
             labelText: 'নতুন স্টক সংখ্যা',
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
+          TextButton(onPressed: Get.back, child: const Text('বাতিল')),
           FilledButton(
             onPressed: () async {
               final newStock = int.tryParse(stockController.text);
               if (newStock != null && newStock >= 0) {
                 await updateStock(newStock);
-                Get.back(); // Close dialog after update
+                Get.back();
               } else {
                 Get.snackbar(
                   'ত্রুটি',
@@ -101,43 +105,28 @@ class MedicineDetailsController extends GetxController {
 
   Future<void> updateStock(int newStock) async {
     if (medicine.value == null) return;
-
-    final updatedMedicine = medicine.value!.copyWith(currentStock: newStock);
-    await _medicineDB.update(updatedMedicine);
-    medicine.value = updatedMedicine;
-
-    // Update home page
+    final updated = medicine.value!.copyWith(currentStock: newStock);
+    await _medicineDB.update(updated);
+    medicine.value = updated;
     Get.find<HomeController>().fetchMedicines();
-
-    Get.snackbar(
-      'সফল',
-      'স্টক সফলভাবে আপডেট হয়েছে',
-      backgroundColor: Colors.green,
-    );
+    Get.snackbar('সফল', 'স্টক আপডেট হয়েছে', backgroundColor: Colors.green);
   }
 
-  // Toggle active/inactive
   Future<void> toggleStatus() async {
     if (medicine.value == null) return;
-
-    final updatedMedicine = medicine.value!.copyWith(
+    final updated = medicine.value!.copyWith(
       isActive: !medicine.value!.isActive,
     );
-    await _medicineDB.update(updatedMedicine);
-    medicine.value = updatedMedicine;
-
+    await _medicineDB.update(updated);
+    medicine.value = updated;
     Get.find<HomeController>().fetchMedicines();
-
     Get.snackbar(
       'সফল',
-      updatedMedicine.isActive
-          ? 'ওষুধটি চালু করা হয়েছে'
-          : 'ওষুধটি বন্ধ করা হয়েছে',
+      updated.isActive ? 'ওষুধটি চালু করা হয়েছে' : 'ওষুধটি বন্ধ করা হয়েছে',
       backgroundColor: Colors.green,
     );
   }
 
-  // Delete medicine
   void deleteMedicine() {
     if (medicine.value == null) return;
 
@@ -150,13 +139,12 @@ class MedicineDetailsController extends GetxController {
       confirmTextColor: Colors.white,
       buttonColor: Colors.red,
       onConfirm: () async {
-        Get.back(); // Close dialog first
         final id = medicine.value!.id!;
         await _medicineDB.delete(id);
-        medicine.value = null; // Clear local obs
+        medicine.value = null;
         Get.find<HomeController>().fetchMedicines();
-        Get.back(); // Close dialog
-        Get.back(); // Close details page
+        Get.back(); // close dialog
+        Get.back(); // close details screen
         Get.snackbar(
           'সফল',
           'ওষুধটি মুছে ফেলা হয়েছে',
